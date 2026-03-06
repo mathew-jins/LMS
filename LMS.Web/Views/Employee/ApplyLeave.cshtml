@@ -1,0 +1,78 @@
+@{
+    ViewData["Title"] = "Apply Leave";
+}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-md-7">
+        <h2 class="mb-4 text-primary fw-bold text-center">Apply for Leave</h2>
+        <div class="card shadow border-0 rounded-4">
+            <div class="card-body p-5">
+                <form id="applyLeaveForm">
+                    <div class="mb-4">
+                        <label class="form-label text-muted fw-bold">Leave Type</label>
+                        <select class="form-select form-select-lg bg-light border-0" id="leaveTypeId" required>
+                            <option value="">Select Leave Type...</option>
+                        </select>
+                    </div>
+                    <div class="row mb-4 g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fw-bold">Start Date</label>
+                            <input type="date" class="form-control form-control-lg bg-light border-0" id="startDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fw-bold">End Date</label>
+                            <input type="date" class="form-control form-control-lg bg-light border-0" id="endDate" required>
+                        </div>
+                    </div>
+                    
+                    <div id="applyError" class="alert alert-danger d-none py-3 border-0 shadow-sm rounded-3"></div>
+                    <div id="applySuccess" class="alert alert-success d-none py-3 border-0 shadow-sm rounded-3">Leave request submitted successfully! Pending admin approval.</div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100 shadow mt-4 fw-bold">Submit Leave Request</button>
+                    <a href="/Employee/Dashboard" class="btn btn-light btn-lg w-100 mt-2 text-muted fw-bold">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            apiCall('/LeaveTypes', 'GET', null, function(types) {
+                let html = '<option value="">Select Leave Type...</option>';
+                types.forEach(t => {
+                    html += `<option value="${t.leaveTypeId}">${t.leaveTypeName}</option>`;
+                });
+                $('#leaveTypeId').html(html);
+            });
+
+            $('#applyLeaveForm').submit(function(e) {
+                e.preventDefault();
+                $('#applyError').addClass('d-none');
+                $('#applySuccess').addClass('d-none');
+
+                const data = {
+                    leaveTypeId: parseInt($('#leaveTypeId').val()),
+                    startDate: $('#startDate').val(),
+                    endDate: $('#endDate').val()
+                };
+
+                $('button[type="submit"]').prop('disabled', true);
+
+                apiCall('/LeaveRequests', 'POST', data, 
+                    function(res) {
+                        $('#applySuccess').removeClass('d-none');
+                        $('#applyLeaveForm')[0].reset();
+                        $('button[type="submit"]').prop('disabled', false);
+                    },
+                    function(err) {
+                        const msg = err.responseJSON ? err.responseJSON.message : 'Error submitting request. Check balance and dates.';
+                        $('#applyError').text(msg).removeClass('d-none');
+                        $('button[type="submit"]').prop('disabled', false);
+                    }
+                );
+            });
+        });
+    </script>
+}

@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center mt-5">
+    <h1 class="display-4 fw-bold text-primary mb-4">Leave Management System</h1>
+    <p class="lead text-muted">Manage your time off efficiently and beautifully.</p>
+    <a href="/Home/Login" class="btn btn-primary btn-lg mt-3 px-5 rounded-pill shadow">Get Started</a>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const user = getUser();
+            if (user) {
+                if (user.role === 'Admin' || user.role === '0' || user.role === 0) window.location.href = '/Admin/Dashboard';
+                else window.location.href = '/Employee/Dashboard';
+            }
+        });
+    </script>
+}

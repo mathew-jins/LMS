@@ -1,0 +1,76 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h2 class="mb-4 text-primary fw-bold">Admin Dashboard</h2>
+
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white h-100 shadow border-0 rounded-4">
+            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                <i class="bi bi-people fs-1 mb-2"></i>
+                <h5 class="card-title fw-normal">Total Employees</h5>
+                <p class="card-text display-4 fw-bold mb-0" id="totalEmployees">0</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark h-100 shadow border-0 rounded-4">
+            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                <i class="bi bi-hourglass-split fs-1 mb-2"></i>
+                <h5 class="card-title fw-normal">Pending Approvals</h5>
+                <p class="card-text display-4 fw-bold mb-0" id="pendingLeaves">0</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white h-100 shadow border-0 rounded-4">
+            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                <i class="bi bi-calendar-check fs-1 mb-2"></i>
+                <h5 class="card-title fw-normal">Leaves Today</h5>
+                <p class="card-text display-4 fw-bold mb-0" id="leavesToday">0</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-dark h-100 shadow border-0 rounded-4">
+            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                <i class="bi bi-tags fs-1 mb-2"></i>
+                <h5 class="card-title fw-normal">Leave Types</h5>
+                <p class="card-text display-4 fw-bold mb-0" id="totalLeaveTypes">0</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const user = getUser();
+            if(!user || (user.role !== 'Admin' && user.role !== '0' && user.role !== 0)) {
+                window.location.href = '/Home/Login';
+                return;
+            }
+
+            apiCall('/Users', 'GET', null, function(users) {
+                $('#totalEmployees').text(users.length);
+            });
+
+            apiCall('/LeaveRequests', 'GET', null, function(reqs) {
+                const pending = reqs.filter(r => r.status === 0 || r.status === 'Pending').length;
+                $('#pendingLeaves').text(pending);
+                
+                const today = new Date().toISOString().split('T')[0];
+                const activeToday = reqs.filter(r => 
+                    (r.status === 1 || r.status === 'Approved') &&
+                    r.startDate.split('T')[0] <= today && r.endDate.split('T')[0] >= today
+                ).length;
+                $('#leavesToday').text(activeToday);
+            });
+
+            apiCall('/LeaveTypes', 'GET', null, function(types) {
+                $('#totalLeaveTypes').text(types.length);
+            });
+        });
+    </script>
+}

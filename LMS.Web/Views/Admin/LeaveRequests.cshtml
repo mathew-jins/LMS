@@ -1,0 +1,108 @@
+@{
+    ViewData["Title"] = "Manage Leave Requests";
+}
+
+<h2 class="mb-4 text-primary fw-bold">Leave Requests</h2>
+
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Employee</th>
+                        <th>Leave Type</th>
+                        <th>Dates</th>
+                        <th>Days</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="requestsTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Review Leave Request</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="requestId" />
+                <div class="mb-3">
+                    <label>Admin Comments</label>
+                    <textarea class="form-control" id="adminComments" rows="3" placeholder="Provide reason if rejecting..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger" onclick="submitReview(2)">Reject</button>
+                <button type="button" class="btn btn-success" onclick="submitReview(1)">Approve</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            loadRequests();
+        });
+
+        function loadRequests() {
+            apiCall('/LeaveRequests', 'GET', null, function(data) {
+                let html = '';
+                data.forEach(r => {
+                    let statusBadge = '';
+                    if(r.status === 0 || r.status === 'Pending') statusBadge = '<span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Pending</span>';
+                    else if(r.status === 1 || r.status === 'Approved') statusBadge = '<span class="badge bg-success px-3 py-2 rounded-pill">Approved</span>';
+                    else statusBadge = '<span class="badge bg-danger px-3 py-2 rounded-pill">Rejected</span>';
+                    
+                    let actions = '';
+                    if(r.status === 0 || r.status === 'Pending') {
+                        actions = `<button class="btn btn-sm btn-outline-primary" onclick="openReview(${r.leaveRequestId})">Review</button>`;
+                    }
+                    else {
+                        actions = `<span class="text-muted"><i class="bi bi-check2-all"></i> Reviewed</span>`;
+                    }
+
+                    html += `
+                        <tr>
+                            <td class="ps-4 fw-bold text-dark">${r.userName}</td>
+                            <td><span class="badge bg-light text-dark border">${r.leaveTypeName}</span></td>
+                            <td>${r.startDate.split('T')[0]} to ${r.endDate.split('T')[0]}</td>
+                            <td><strong>${r.totalDays}</strong> Days</td>
+                            <td>${statusBadge}</td>
+                            <td class="text-end pe-4">${actions}</td>
+                        </tr>
+                    `;
+                });
+                $('#requestsTableBody').html(html);
+            });
+        }
+
+        function openReview(id) {
+            $('#requestId').val(id);
+            $('#adminComments').val('');
+            new bootstrap.Modal(document.getElementById('reviewModal')).show();
+        }
+
+        function submitReview(statusValue) {
+            const id = $('#requestId').val();
+            const comments = $('#adminComments').val();
+            const action = statusValue === 1 ? 'approve' : 'reject';
+            const data = {
+                status: statusValue,
+                adminComments: comments
+            };
+            apiCall(`/LeaveRequests/${id}/${action}`, 'PUT', data, function() {
+                $('#reviewModal').modal('hide');
+                loadRequests();
+            });
+        }
+    </script>
+}

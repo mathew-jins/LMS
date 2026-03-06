@@ -1,0 +1,88 @@
+@{
+    ViewData["Title"] = "Employee Dashboard";
+}
+
+<h2 class="mb-4 text-primary fw-bold">My Dashboard</h2>
+
+<div class="row g-4 mb-5" id="balancesContainer">
+    <!-- Balances will be loaded here -->
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="text-secondary fw-bold mb-0">Recent Leave Requests</h4>
+    <a href="/Employee/LeaveHistory" class="btn btn-outline-primary shadow-sm btn-sm">View All History</a>
+</div>
+
+<div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Leave Type</th>
+                        <th>Dates</th>
+                        <th>Days</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="recentRequestsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const user = getUser();
+            if(!user) {
+                window.location.href = '/Home/Login';
+                return;
+            }
+
+            apiCall('/LeaveBalances/my-balance', 'GET', null, function(balances) {
+                let html = '';
+                const colors = ['bg-primary', 'bg-success', 'bg-info text-dark', 'bg-warning text-dark'];
+                balances.forEach((b, i) => {
+                    const colorClass = colors[i % colors.length];
+                    html += `
+                        <div class="col-md-4">
+                            <div class="card ${colorClass} h-100 shadow border-0 rounded-4">
+                                <div class="card-body d-flex flex-column justify-content-center align-items-center py-4">
+                                    <h5 class="card-title fw-normal mb-3">${b.leaveTypeName}</h5>
+                                    <h1 class="display-3 fw-bold mb-0">${b.remainingDays}</h1>
+                                    <p class="mb-0 mt-2 opacity-75">Remaining of ${b.totalDays}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                $('#balancesContainer').html(html);
+            });
+
+            apiCall('/LeaveRequests', 'GET', null, function(reqs) {
+                reqs.sort((a,b) => new Date(b.createdDate) - new Date(a.createdDate));
+                const recent = reqs.slice(0, 5);
+
+                let html = '';
+                recent.forEach(r => {
+                    let statusBadge = '';
+                    if(r.status === 0 || r.status === 'Pending') statusBadge = '<span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Pending</span>';
+                    else if(r.status === 1 || r.status === 'Approved') statusBadge = '<span class="badge bg-success px-3 py-2 rounded-pill">Approved</span>';
+                    else statusBadge = '<span class="badge bg-danger px-3 py-2 rounded-pill">Rejected</span>';
+
+                    html += `
+                        <tr>
+                            <td class="ps-4 fw-bold text-dark">${r.leaveTypeName}</td>
+                            <td>${r.startDate.split('T')[0]} to ${r.endDate.split('T')[0]}</td>
+                            <td><strong>${r.totalDays}</strong> Days</td>
+                            <td>${statusBadge}</td>
+                        </tr>
+                    `;
+                });
+                $('#recentRequestsBody').html(html);
+            });
+        });
+    </script>
+}
