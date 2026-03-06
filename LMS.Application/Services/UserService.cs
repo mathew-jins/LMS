@@ -8,10 +8,12 @@ namespace LMS.Application.Services
     public class UserService : IUserService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILeaveBalanceService _leaveBalanceService;
 
-        public UserService(IUnitOfWork unitOfWork)
+        public UserService(IUnitOfWork unitOfWork, ILeaveBalanceService leaveBalanceService)
         {
             _unitOfWork = unitOfWork;
+            _leaveBalanceService = leaveBalanceService;
         }
 
         public async Task<UserDto?> CreateUserAsync(RegisterRequest request)
@@ -27,6 +29,10 @@ namespace LMS.Application.Services
             
             await _unitOfWork.Users.AddAsync(user);
             await _unitOfWork.CompleteAsync();
+
+            // Automatically initialize balances for the newly created user
+            var currentYear = DateTime.UtcNow.Year;
+            await _leaveBalanceService.InitializeBalancesForUserAsync(user.UserId, currentYear);
 
             return MapToDto(user);
         }

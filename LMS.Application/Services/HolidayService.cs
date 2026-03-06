@@ -19,7 +19,7 @@ namespace LMS.Application.Services
             var entity = new Holiday
             {
                 HolidayName = dto.HolidayName,
-                HolidayDate = dto.HolidayDate
+                HolidayDate = DateTime.SpecifyKind(dto.HolidayDate, DateTimeKind.Utc)
             };
             await _unitOfWork.Holidays.AddAsync(entity);
             await _unitOfWork.CompleteAsync();
@@ -67,7 +67,7 @@ namespace LMS.Application.Services
             if (entity != null)
             {
                 entity.HolidayName = dto.HolidayName;
-                entity.HolidayDate = dto.HolidayDate;
+                entity.HolidayDate = DateTime.SpecifyKind(dto.HolidayDate, DateTimeKind.Utc);
                 _unitOfWork.Holidays.Update(entity);
                 await _unitOfWork.CompleteAsync();
             }

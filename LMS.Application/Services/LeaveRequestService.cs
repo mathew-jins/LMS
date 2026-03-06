@@ -43,8 +43,8 @@ namespace LMS.Application.Services
             {
                 UserId = userId,
                 LeaveTypeId = dto.LeaveTypeId,
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
+                StartDate = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc),
+                EndDate = DateTime.SpecifyKind(dto.EndDate, DateTimeKind.Utc),
                 TotalDays = totalDays,
                 Status = LeaveStatus.Pending,
                 CreatedDate = DateTime.UtcNow

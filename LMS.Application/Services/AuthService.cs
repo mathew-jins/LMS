@@ -15,11 +15,13 @@ namespace LMS.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _configuration;
+        private readonly ILeaveBalanceService _leaveBalanceService;
 
-        public AuthService(IUnitOfWork unitOfWork, IConfiguration configuration)
+        public AuthService(IUnitOfWork unitOfWork, IConfiguration configuration, ILeaveBalanceService leaveBalanceService)
         {
             _unitOfWork = unitOfWork;
             _configuration = configuration;
+            _leaveBalanceService = leaveBalanceService;
         }
 
         public async Task<AuthResponse?> LoginAsync(LoginRequest request)
@@ -64,6 +66,10 @@ namespace LMS.Application.Services
 
             await _unitOfWork.Users.AddAsync(user);
             await _unitOfWork.CompleteAsync();
+
+            // Automatically initialize user balances based on the default Leave Types (now 12 days)
+            var currentYear = DateTime.UtcNow.Year;
+            await _leaveBalanceService.InitializeBalancesForUserAsync(user.UserId, currentYear);
 
             var token = GenerateJwtToken(user);
 

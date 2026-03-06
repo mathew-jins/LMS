@@ -18,8 +18,8 @@ namespace LMS.Application.Services
         {
             var entity = new LeavePeriod
             {
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
+                StartDate = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc),
+                EndDate = DateTime.SpecifyKind(dto.EndDate, DateTimeKind.Utc),
                 Year = dto.Year,
                 IsActive = dto.IsActive
             };
@@ -66,8 +66,8 @@ namespace LMS.Application.Services
             var entity = await _unitOfWork.LeavePeriods.GetByIdAsync(id);
             if (entity != null)
             {
-                entity.StartDate = dto.StartDate;
-                entity.EndDate = dto.EndDate;
+                entity.StartDate = DateTime.SpecifyKind(dto.StartDate, DateTimeKind.Utc);
+                entity.EndDate = DateTime.SpecifyKind(dto.EndDate, DateTimeKind.Utc);
                 entity.Year = dto.Year;
                 entity.IsActive = dto.IsActive;
                 _unitOfWork.LeavePeriods.Update(entity);

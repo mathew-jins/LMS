@@ -116,10 +116,21 @@ using (var scope = app.Services.CreateScope())
             IsActive = true
         });
         context.LeaveTypes.AddRange(
-            new LMS.Domain.Entities.LeaveType { LeaveTypeName = "Casual Leave", MaxDaysPerYear = 10, Description = "Casual Leave" },
-            new LMS.Domain.Entities.LeaveType { LeaveTypeName = "Sick Leave", MaxDaysPerYear = 10, Description = "Sick Leave" },
-            new LMS.Domain.Entities.LeaveType { LeaveTypeName = "Earned Leave", MaxDaysPerYear = 15, Description = "Earned Leave" }
+            new LMS.Domain.Entities.LeaveType { LeaveTypeName = "Casual Leave", MaxDaysPerYear = 12, Description = "Casual Leave" },
+            new LMS.Domain.Entities.LeaveType { LeaveTypeName = "Sick Leave", MaxDaysPerYear = 12, Description = "Sick Leave" },
+            new LMS.Domain.Entities.LeaveType { LeaveTypeName = "Earned Leave", MaxDaysPerYear = 12, Description = "Earned Leave" }
         );
+        context.SaveChanges();
+    }
+    
+    // Enforcement of default 12 leaves for existing DB data
+    var existingLeaveTypes = context.LeaveTypes.Where(lt => lt.MaxDaysPerYear != 12).ToList();
+    if(existingLeaveTypes.Any())
+    {
+        foreach(var lt in existingLeaveTypes)
+        {
+            lt.MaxDaysPerYear = 12;
+        }
         context.SaveChanges();
     }
 }
